@@ -1,0 +1,1 @@
+const mongoose=require('mongoose'); module.exports=mongoose.model('User',new mongoose.Schema({email:{type:String,unique:true,lowercase:true,required:true},password:{type:String,required:true},role:{type:String,enum:['admin'],default:'admin'}},{timestamps:true}));

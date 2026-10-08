@@ -1,0 +1,2 @@
+const router=require('express').Router();const auth=require('../middleware/auth');const Custom=require('../models/CustomPrintOrder');
+router.post('/',async(req,res)=>{try{res.status(201).json(await Custom.create(req.body))}catch(e){res.status(400).json({message:e.message})}});router.get('/',auth,async(req,res)=>res.json(await Custom.find().sort({createdAt:-1})));router.patch('/:id',auth,async(req,res)=>res.json(await Custom.findByIdAndUpdate(req.params.id,req.body,{new:true})));module.exports=router;

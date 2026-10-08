@@ -1,0 +1,1 @@
+const router=require('express').Router();const auth=require('../middleware/auth');const upload=require('../middleware/upload');router.post('/',auth,upload.single('image'),(req,res)=>{if(!req.file)return res.status(400).json({message:'Only JPG, PNG and WEBP images up to 5MB are allowed'});res.status(201).json({url:'/uploads/'+req.file.filename})});module.exports=router;
