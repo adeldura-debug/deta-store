@@ -1,0 +1,1 @@
+const mongoose=require('mongoose'); module.exports=mongoose.model('Discount',new mongoose.Schema({name:String,type:{type:String,enum:['percentage','fixed']},value:Number,startDate:Date,endDate:Date,products:[{type:mongoose.Schema.Types.ObjectId,ref:'Product'}],active:{type:Boolean,default:true}},{timestamps:true}));

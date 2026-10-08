@@ -1,0 +1,1 @@
+const router=require('express').Router();const auth=require('../middleware/auth');const Brand=require('../models/BrandSettings');router.get('/',async(req,res)=>res.json(await Brand.findOne()||{}));router.put('/',auth,async(req,res)=>res.json(await Brand.findOneAndUpdate({},req.body,{upsert:true,new:true})));module.exports=router;

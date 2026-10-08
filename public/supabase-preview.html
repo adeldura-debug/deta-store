@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DETA — Supabase Test</title>
+  <link rel="stylesheet" href="formal.css">
+</head>
+<body>
+  <header><a class="logo" href="supabase-preview.html">DETA<span>®</span></a><nav><a href="#products">المنتجات</a><a href="#print">اطبع فكرتك</a></nav><div class="tools"><button id="lang">EN</button><button id="cart">السلة (<b>0</b>)</button></div></header>
+  <main class="shop" style="min-height:80vh">
+    <p class="tag">SUPABASE CONNECTED STORE</p><h1 style="font-size:64px">المجموعة<br><em>الحالية.</em></h1>
+    <p id="connection" style="color:#65717d">جاري فحص الاتصال بقاعدة البيانات...</p>
+    <div id="products" class="products"><p>جاري تحميل المنتجات...</p></div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-store.js"></script>
+  <script>document.addEventListener('DOMContentLoaded',()=>{const el=document.querySelector('#connection');el.textContent=window.detaSupabaseReady?.()?'تم تحميل إعدادات Supabase. إذا لم تظهر المنتجات فتأكد من وجود منتجات منشورة.':'لم يتم وضع رابط Supabase أو المفتاح العام بعد.'});</script>
+</body>
+</html>

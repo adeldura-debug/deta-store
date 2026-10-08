@@ -1,0 +1,1 @@
+const mongoose=require('mongoose'); module.exports=mongoose.model('BrandSettings',new mongoose.Schema({heroTitle:{ar:String,en:String},heroText:{ar:String,en:String},heroImage:String,introTitle:{ar:String,en:String},introText:{ar:String,en:String}},{timestamps:true}));
