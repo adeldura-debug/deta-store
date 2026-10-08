@@ -23,3 +23,7 @@ create policy "admins manage brand" on public.brand_settings for update using (p
 create policy "admins manage coupons" on public.coupons for all using (public.is_admin()) with check (public.is_admin());
 create policy "admins manage discounts" on public.discounts for all using (public.is_admin()) with check (public.is_admin());
 insert into storage.buckets(id,name,public) values('product-images','product-images',true),('print-designs','print-designs',false) on conflict(id) do nothing;
+alter table public.brand_settings add column if not exists collection_title_ar text default 'منتجاتنا الأخيرة';
+alter table public.brand_settings add column if not exists custom_title_ar text default 'فكرتك، على قطعة.';
+alter table public.brand_settings add column if not exists custom_text_ar text default '';
+alter table public.brand_settings add column if not exists footer_text_ar text default '© DETA — ملابس تصنعها أنت';
