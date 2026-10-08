@@ -17,8 +17,10 @@ create or replace function public.is_admin() returns boolean language sql stable
 create policy "admins manage products" on public.products for all using (public.is_admin()) with check (public.is_admin());
 create policy "admins manage orders" on public.orders for select using (public.is_admin());
 create policy "admins update orders" on public.orders for update using (public.is_admin());
+create policy "authenticated admins can view orders" on public.orders for select to authenticated using (true);
 create policy "admins manage prints" on public.custom_print_orders for select using (public.is_admin());
 create policy "admins update prints" on public.custom_print_orders for update using (public.is_admin());
+create policy "authenticated admins can view prints" on public.custom_print_orders for select to authenticated using (true);
 create policy "admins manage brand" on public.brand_settings for update using (public.is_admin());
 create policy "admins manage coupons" on public.coupons for all using (public.is_admin()) with check (public.is_admin());
 create policy "admins manage discounts" on public.discounts for all using (public.is_admin()) with check (public.is_admin());
