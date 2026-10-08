@@ -1,4 +1,109 @@
-const adm=supabase.createClient(DETA_SUPABASE_URL,DETA_SUPABASE_ANON_KEY),qa2=s=>document.querySelector(s);const safeA=x=>String(x??'').replace(/[&<>]/g,'');async function loadAdminFinal(){const [p,o,c]=await Promise.all([adm.from('products').select('*').order('created_at',{ascending:false}),adm.from('orders').select('*').order('created_at',{ascending:false}),adm.from('custom_print_orders').select('*').order('created_at',{ascending:false})]);qa2('#products').innerHTML=(p.data||[]).map(x=>`<div class="row"><span>${safeA(x.name_ar)} · ${x.price}$ · مخزون ${x.stock}</span><span><button class="danger" onclick="delP('${x.id}')">حذف</button></span></div>`).join('')||'لا توجد منتجات';qa2('#orders').innerHTML=(o.data||[]).map(x=>`<div class="row"><span>${safeA(x.customer_name)} · ${x.total}$<br>${safeA(x.customer_phone)}</span><select onchange="setO('${x.id}',this.value)"><option>${x.status}</option><option>new</option><option>processing</option><option>shipped</option><option>completed</option><option>cancelled</option></select></div>`).join('')||'لا توجد طلبات';qa2('#prints').innerHTML=(c.data||[]).map(x=>`<div class="row"><span>${safeA(x.customer_name)} · ${safeA(x.garment_type)} · ${x.quantity}</span><span>${x.status}</span></div>`).join('')||'لا توجد طلبات طباعة'}window.delP=async id=>{if(confirm('حذف المنتج؟')){const r=await adm.from('products').delete().eq('id',id);if(r.error)alert(r.error.message);loadAdminFinal()}};window.setO=async(id,status)=>{const r=await adm.from('orders').update({status}).eq('id',id);if(r.error)alert(r.error.message)};qa2('#loginForm').onsubmit=async e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.target)),r=await adm.auth.signInWithPassword({email:f.email,password:f.password});if(r.error)qa2('#loginMsg').textContent=r.error.message;else{qa2('#login').hidden=true;qa2('#app').hidden=false;loadAdminFinal()}};qa2('#logout').onclick=async()=>{await adm.auth.signOut();location.reload()};adm.auth.getSession().then(({data})=>{if(data.session){qa2('#login').hidden=true;qa2('#app').hidden=false;loadAdminFinal()}});
-// Show database errors instead of silently rendering an empty list.
-const detaLoadAdminFinal=loadAdminFinal;loadAdminFinal=async()=>{const result=await Promise.all([adm.from('products').select('*').order('created_at',{ascending:false}),adm.from('orders').select('*').order('created_at',{ascending:false}),adm.from('custom_print_orders').select('*').order('created_at',{ascending:false})]);const err=result.find(x=>x.error);if(err){const box=qa2('#orders');if(box)box.innerHTML=`<div class="row">${safeA(err.error.message)}</div>`;return}return detaLoadAdminFinal()};loadAdminFinal();
-const detaFullOrders=async()=>{const r=await adm.from('orders').select('*').order('created_at',{ascending:false});const box=qa2('#orders');if(r.error){box.innerHTML=`<div class="row">${safeA(r.error.message)}</div>`;return}box.innerHTML=(r.data||[]).map(x=>{const item=Array.isArray(x.items)?x.items[0]||{}:{};const date=x.created_at?new Date(x.created_at).toLocaleString('ar-SY'):'';return `<div class="row" style="display:block;padding:18px 0;line-height:1.9"><strong>العميل: ${safeA(x.customer_name)}</strong><br>الهاتف: ${safeA(x.customer_phone)}${x.customer_email?`<br>البريد: ${safeA(x.customer_email)}`:''}<br>العنوان: ${safeA(x.customer_address)}<br>المنتج: ${safeA(item.name)} · المقاس: ${safeA(item.size)} · اللون: ${safeA(item.color)} · الكمية: ${item.quantity||1}<br>سعر القطعة: ${item.price||0}$ · المجموع: ${x.total||0}$<br><small>${date}</small><br><select onchange="setO('${x.id}',this.value)"><option>${safeA(x.status)}</option><option>new</option><option>processing</option><option>shipped</option><option>completed</option><option>cancelled</option></select></div>`}).join('')||'لا توجد طلبات'};loadAdminFinal=detaFullOrders;detaFullOrders();
+const adm = supabase.createClient(DETA_SUPABASE_URL, DETA_SUPABASE_ANON_KEY);
+const qa2 = selector => document.querySelector(selector);
+const safeA = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const orderStatuses = ['new', 'processing', 'shipped', 'completed', 'cancelled'];
+
+function orderItems(order) {
+  if (Array.isArray(order.items)) return order.items;
+  if (typeof order.items === 'string') {
+    try { const parsed = JSON.parse(order.items); return Array.isArray(parsed) ? parsed : []; }
+    catch { return []; }
+  }
+  return [];
+}
+
+function renderOrder(order) {
+  const items = orderItems(order);
+  const itemRows = items.length ? items.map((item, index) => `
+    <li style="margin:8px 0">
+      <strong>${safeA(item.name_ar || item.name || item.product_name || `المنتج ${index + 1}`)}</strong>
+      · المقاس: ${safeA(item.size || '—')}
+      · اللون: ${safeA(item.color || '—')}
+      · الكمية: ${safeA(item.quantity ?? 1)}
+      · سعر القطعة: ${safeA(item.price ?? 0)} $
+    </li>`).join('') : '<li>لا توجد تفاصيل منتجات محفوظة لهذا الطلب.</li>';
+  const date = order.created_at ? new Date(order.created_at).toLocaleString('ar-SY') : '—';
+  const statuses = [...new Set([order.status, ...orderStatuses].filter(Boolean))];
+  return `<article class="order-card" style="display:block;padding:18px 0;border-top:1px solid #e2e6e8;line-height:1.9">
+    <strong>رقم الطلب: ${safeA(order.id)}</strong> · <small>${safeA(date)}</small><br>
+    العميل: ${safeA(order.customer_name || '—')}<br>
+    الهاتف: ${safeA(order.customer_phone || '—')}<br>
+    ${order.customer_email ? `البريد الإلكتروني: ${safeA(order.customer_email)}<br>` : ''}
+    العنوان: ${safeA(order.customer_address || '—')}<br>
+    المنتجات:
+    <ul style="margin:4px 0;padding-right:22px">${itemRows}</ul>
+    ${order.discount ? `الخصم: ${safeA(order.discount)} $${order.coupon_code ? ` · القسيمة: ${safeA(order.coupon_code)}` : ''}<br>` : ''}
+    الإجمالي: <strong>${safeA(order.total ?? 0)} $</strong><br>
+    الحالة: <select data-order-id="${safeA(order.id)}">${statuses.map(status => `<option value="${safeA(status)}" ${status === order.status ? 'selected' : ''}>${safeA(status)}</option>`).join('')}</select>
+  </article>`;
+}
+
+async function loadAdminFinal() {
+  const [products, orders, prints] = await Promise.all([
+    adm.from('products').select('*').order('created_at', { ascending: false }),
+    adm.from('orders').select('*').order('created_at', { ascending: false }),
+    adm.from('custom_print_orders').select('*').order('created_at', { ascending: false })
+  ]);
+  if (products.error || orders.error || prints.error) {
+    const error = products.error || orders.error || prints.error;
+    qa2('#orders').innerHTML = `<div class="row">${safeA(error.message)}</div>`;
+    return;
+  }
+  qa2('#products').innerHTML = (products.data || []).map(product => `
+    <div class="row"><span>${safeA(product.name_ar)} · ${safeA(product.price)} $ · المخزون ${safeA(product.stock)}</span>
+      <button class="danger" data-delete-product="${safeA(product.id)}">حذف</button>
+    </div>`).join('') || 'لا توجد منتجات';
+  qa2('#orders').innerHTML = (orders.data || []).map(renderOrder).join('') || 'لا توجد طلبات';
+  qa2('#prints').innerHTML = (prints.data || []).map(print => `
+    <article class="row" style="display:block;padding:18px 0;line-height:1.9;border-top:1px solid #e2e6e8">
+      <strong>العميل:</strong> ${safeA(print.customer_name)}<br>
+      <strong>الهاتف:</strong> ${safeA(print.customer_phone)}<br>
+      ${print.customer_email ? `<strong>البريد:</strong> ${safeA(print.customer_email)}<br>` : ''}
+      <strong>القطعة:</strong> ${safeA(print.garment_type)} · <strong>المقاس:</strong> ${safeA(print.size)} · <strong>اللون:</strong> ${safeA(print.color)}<br>
+      <strong>الكمية:</strong> ${safeA(print.quantity)}<br>
+      <strong>الوصف:</strong> ${safeA(print.description)}<br>
+      <strong>الحالة:</strong> ${safeA(print.status)}
+    </article>`).join('') || 'لا توجد طلبات طباعة';
+}
+
+window.setO = async (id, status) => {
+  const result = await adm.from('orders').update({ status }).eq('id', id);
+  if (result.error) alert(result.error.message);
+};
+
+qa2('#products').addEventListener('click', async event => {
+  const button = event.target.closest('[data-delete-product]');
+  if (!button || !confirm('حذف المنتج؟')) return;
+  const result = await adm.from('products').delete().eq('id', button.dataset.deleteProduct);
+  if (result.error) alert(result.error.message);
+  else loadAdminFinal();
+});
+
+qa2('#orders').addEventListener('change', event => {
+  const select = event.target.closest('select[data-order-id]');
+  if (select) window.setO(select.dataset.orderId, select.value);
+});
+
+qa2('#loginForm').addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = Object.fromEntries(new FormData(event.target));
+  const result = await adm.auth.signInWithPassword({ email: form.email, password: form.password });
+  if (result.error) qa2('#loginMsg').textContent = result.error.message;
+  else {
+    qa2('#login').hidden = true;
+    qa2('#app').hidden = false;
+    loadAdminFinal();
+  }
+});
+
+qa2('#logout').addEventListener('click', async () => {
+  await adm.auth.signOut();
+  location.reload();
+});
+
+adm.auth.getSession().then(({ data }) => {
+  if (!data.session) return;
+  qa2('#login').hidden = true;
+  qa2('#app').hidden = false;
+  loadAdminFinal();
+});
