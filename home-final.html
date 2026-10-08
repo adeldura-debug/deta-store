@@ -1,0 +1,59 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DETA</title><link rel="stylesheet" href="formal.css"></head><body><div id="promo" class="promo"></div><header><a class="logo" href="home-final.html">DETA<span>®</span></a><nav><a href="supabase-shop.html">المتجر</a><a href="supabase-shop.html#print">الطباعة المخصصة</a><a href="#about">عن DETA</a></nav><a class="btn" href="supabase-shop.html">تسوق الآن ↗</a></header><main><section class="hero"><div><p class="tag">DETA CLOTHING</p><h1 id="heroTitle">ملابس<br><em>بهوية.</em></h1><p id="heroText">قطع يومية بخامات راقية، صُممت لتمنحك حضورًا هادئًا وواضحًا.</p><a class="btn" href="supabase-shop.html">اكتشف المجموعة ↗</a></div><div id="heroVisual" class="hero-image"><span>DETA<br><small>MADE TO BE YOURS</small></span></div></section><section class="home-products"><p class="tag">THE COLLECTION</p><h2>اختياراتنا الأخيرة</h2><div id="products" class="product-row"></div></section><section class="print"><div><p class="tag">DETA CUSTOM PRINT</p><h2>فكرتك،<br><em>قطعتك.</em></h2><p>أرسل تصميمك وسنحوّله إلى قطعة مصنوعة لك بعناية.</p><a class="btn" href="supabase-shop.html#print">اطبع فكرتك ↗</a></div><div class="print-card">DETA<br><span>CUSTOM<br>EDITION</span></div></section><section id="about" class="about"><p class="tag">ABOUT DETA</p><h2 id="introTitle">الأناقة في<br><em>التفاصيل.</em></h2><p id="introText" style="max-width:430px;color:#65717d;line-height:2"></p></section></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script>const fsb=supabase.createClient(DETA_SUPABASE_URL,DETA_SUPABASE_ANON_KEY);async function render(){const s=await fsb.from('brand_settings').select('*').single();if(s.data){document.querySelector('#heroText').textContent=s.data.hero_text_ar||document.querySelector('#heroText').textContent;document.querySelector('#introTitle').textContent=s.data.intro_title_ar||'الأناقة في التفاصيل.';document.querySelector('#introText').textContent=s.data.intro_text_ar||'';if(s.data.hero_image)document.querySelector('#heroVisual').style.backgroundImage=`url('${s.data.hero_image}')`}const p=await fsb.from('products').select('*').eq('status','published').order('created_at',{ascending:false}).limit(4);document.querySelector('#products').innerHTML=(p.data||[]).map(x=>`<article class="mini"><div class="ph"></div><div><b>${x.name_ar}</b><p>${x.price} $</p><a href="supabase-shop.html">اطلب الآن ↗</a></div></article>`).join('')||'<p>لا توجد منتجات منشورة بعد.</p>'}render();</script></body></html>
+<script>(function(){var c=window.supabase.createClient(window.DETA_SUPABASE_URL,window.DETA_SUPABASE_ANON_KEY);c.from('brand_settings').select('*').eq('id',true).maybeSingle().then(function(r){var x=r.data;if(!x)return;var set=function(sel,val){var e=document.querySelector(sel);if(e&&val)e.textContent=val};set('#heroTitle',x.hero_title_ar);set('#heroText',x.hero_text_ar);set('.home-products h2',x.collection_title_ar);set('.print h2',x.custom_title_ar);set('.print p',x.custom_text_ar);set('.about h2',x.intro_title_ar);set('#introText',x.intro_text_ar);var v=document.querySelector('#heroVisual');if(v&&x.hero_image){v.style.backgroundImage='url("'+(/^https?:\/\//i.test(x.hero_image)?x.hero_image:window.DETA_SUPABASE_URL+'/storage/v1/object/public/product-images/'+encodeURIComponent(x.hero_image))+'")';v.style.backgroundSize='cover'}})})()</script>
+<script>(function(){var c=window.supabase.createClient(window.DETA_SUPABASE_URL,window.DETA_SUPABASE_ANON_KEY);c.from('brand_settings').select('footer_text_ar').eq('id',true).maybeSingle().then(function(r){var text=r.data&&r.data.footer_text_ar;if(!text)return;var f=document.querySelector('footer');if(!f){f=document.createElement('footer');f.className='footer';f.style.cssText='padding:25px 7%;color:#92999d;border-top:1px solid #e5e0d7;font-size:13px';document.body.appendChild(f)}f.textContent=text})})()</script>
+
+<!-- image-path-fix -->
+<script>
+(() => {
+  const fix = () => document.querySelectorAll('img').forEach((img) => {
+    const src = img.getAttribute('src');
+    if (src && src.startsWith('/') && !src.startsWith('//')) img.src = `../${src.slice(1)}`;
+  });
+  addEventListener('DOMContentLoaded', () => {
+    fix();
+    new MutationObserver(fix).observe(document.documentElement, {childList:true, subtree:true});
+  });
+})();
+</script>
+<script>
+(() => {
+  const root = document.querySelector('#products');
+  if (!root) return;
+  const client = window.supabase.createClient(window.DETA_SUPABASE_URL, window.DETA_SUPABASE_ANON_KEY);
+  const storageUrl = value => {
+    if (!value) return '';
+    if (/^https?:\/\//i.test(value)) return value;
+    const path = String(value).replace(/^\/+/, '').split('/').map(encodeURIComponent).join('/');
+    return `${window.DETA_SUPABASE_URL}/storage/v1/object/public/product-images/${path}`;
+  };
+  let loading = false;
+  const showProductImages = async () => {
+    if (loading || !root.querySelector('.mini')) return;
+    loading = true;
+    try {
+      const { data, error } = await client.from('products').select('*').eq('status', 'published').order('created_at', { ascending: false }).limit(4);
+      if (error || !data) return;
+      root.querySelectorAll('.mini').forEach((card, index) => {
+        const product = data[index];
+        const imageValue = product && (Array.isArray(product.images) ? product.images[0] : product.images || product.image_url);
+        const src = storageUrl(typeof imageValue === 'object' ? imageValue?.url : imageValue);
+        const slot = card.querySelector('.ph');
+        if (!src || !slot || slot.dataset.imageReady) return;
+        const image = document.createElement('img');
+        image.src = src;
+        image.alt = product.name_ar || 'صورة المنتج';
+        image.loading = 'lazy';
+        image.style.cssText = 'display:block;width:100%;height:220px;object-fit:contain;object-position:center;background:#e5e5e3';
+        slot.replaceChildren(image);
+        slot.style.cssText += ';min-height:220px;overflow:hidden;background:#e5e5e3';
+        slot.dataset.imageReady = 'true';
+      });
+    } finally {
+      loading = false;
+    }
+  };
+  const observer = new MutationObserver(showProductImages);
+  observer.observe(root, { childList: true, subtree: true });
+  showProductImages();
+})();
+</script>
