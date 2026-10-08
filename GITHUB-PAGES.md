@@ -1,10 +1,10 @@
 # نشر DETA على GitHub Pages
 
-1. ضع مجلد `public` داخل مستودع GitHub.
-2. اجعل `home-final.html` اسم `index.html` في نسخة النشر.
-3. ارفع `formal.css` و`store.css` وملفات JavaScript و`supabase-config.js` معه.
-4. من GitHub افتح Settings → Pages.
-5. اختر Deploy from branch ثم main و`/root`.
-6. افتح رابط GitHub Pages الناتج.
+المستودع الموجود هو `adeldura-debug/deta-store`. يحتفظ المشروع بالصفحات داخل `public/` ويستخدم `.github/workflows/pages.yml` لنشر هذا المجلد تلقائيًا. لا تنقل الملفات ولا تستبدل `home-final.html` بصفحة تجريبية.
 
-تنبيه: لا ترفع `service_role key`. المفتاح الموجود في `supabase-config.js` يجب أن يكون Publishable/anon فقط. GitHub Pages يشغّل الواجهة فقط، بينما قاعدة البيانات والرفع يعملان على Supabase.
+1. ارفع الملفات المحدّثة إلى فرع `main` في المستودع الحالي.
+2. تأكد أن `.github/workflows/pages.yml` و`public/index.html` موجودان.
+3. من تبويب Actions انتظر نجاح `Deploy DETA to GitHub Pages`.
+4. انسخ رابط الموقع من Settings → Pages أو من نتيجة الـ workflow.
+
+قبل الرفع شغّل ملفات SQL في `SUPABASE-SETUP.md`، خصوصًا `supabase-storefront-read.sql` لعرض الخصومات العامة. لا ترفع `.env` أو `service_role key`؛ المفتاح الموجود في `public/supabase-config.js` يجب أن يبقى Publishable/anon فقط.

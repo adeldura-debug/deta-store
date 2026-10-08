@@ -24,6 +24,7 @@ create policy "authenticated admins can view prints" on public.custom_print_orde
 create policy "admins manage brand" on public.brand_settings for update using (public.is_admin());
 create policy "admins manage coupons" on public.coupons for all using (public.is_admin()) with check (public.is_admin());
 create policy "admins manage discounts" on public.discounts for all using (public.is_admin()) with check (public.is_admin());
+create policy "public can read active discounts" on public.discounts for select to anon, authenticated using (active=true and (start_date is null or start_date<=now()) and (end_date is null or end_date>=now()));
 insert into storage.buckets(id,name,public) values('product-images','product-images',true),('print-designs','print-designs',false) on conflict(id) do nothing;
 alter table public.brand_settings add column if not exists collection_title_ar text default 'منتجاتنا الأخيرة';
 alter table public.brand_settings add column if not exists custom_title_ar text default 'فكرتك، على قطعة.';

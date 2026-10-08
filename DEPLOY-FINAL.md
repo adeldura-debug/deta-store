@@ -1,29 +1,26 @@
 # نشر DETA نهائيًا
 
+المستودع الحالي: `adeldura-debug/deta-store`. النشر مضبوط عبر GitHub Actions من مجلد `public`؛ لا تنشئ مستودعًا جديدًا ولا تغيّر اسم الصفحة الرئيسية.
+
 ## قبل الرفع
 
-1. في `public/supabase-config.js` ضع Project URL وPublishable key فقط.
-2. شغّل `supabase-schema.sql` و`supabase-promo.sql` داخل Supabase.
-3. أنشئ المستخدم والمدير وBuckets الصور.
-4. استخدم `index-live.html` كصفحة `index.html` عند الرفع، أو اجعل GitHub Pages يبدأ من هذا الملف عبر إعادة تسميته إلى `index.html`.
+1. تأكد أن `public/supabase-config.js` يحتوي Project URL وPublishable/anon key فقط.
+2. شغّل `supabase-schema.sql` و`supabase-promo.sql` و`supabase-final-security.sql` و`supabase-storefront-read.sql` في Supabase SQL Editor.
+3. راجع قائمة الملفات ولا ترفع `.env` أو `node_modules` أو مفاتيح `service_role`.
+4. ارفع الملفات إلى فرع `main` مع إبقاء `.github/workflows/pages.yml` في مساره.
 
-## GitHub Pages
+## النشر
 
-1. أنشئ Repository جديدًا على GitHub.
-2. ارفع المشروع كاملًا كما هو.
-3. من Settings → Pages اختر GitHub Actions.
-4. انتظر انتهاء Workflow باسم `Deploy DETA to GitHub Pages`.
-5. افتح الرابط الذي يظهر في Deployments.
+يبدأ Workflow `Deploy DETA to GitHub Pages` تلقائيًا بعد تحديث `main`. من تبويب Actions تأكد أن التشغيل نجح، ثم افتح رابط GitHub Pages من Settings → Pages أو من ملخص النشر.
 
-GitHub Pages يستضيف الواجهة فقط. Supabase يستضيف قاعدة البيانات والمصادقة والصور، لذلك لا تحتاج Node.js عند الزوار.
+GitHub Pages يستضيف واجهة الموقع فقط. قاعدة البيانات والمصادقة والصور تعتمد على Supabase، والواجهة الحالية تحفظ الطلبات والتخصيص في جدول `orders` الموجود.
 
 ## الصفحات
 
 - الرئيسية: `home-final.html`
-- المتجر والطلب المباشر: `supabase-shop.html`
-- المتجر مع الخصم: `supabase-shop-discount.html`
-- إدارة المنتجات: `supabase-admin-simple.html`
+- المتجر والتخصيص والطلب: `supabase-shop.html`
+- لوحة المنتجات والطلبات الحالية: `supabase-admin-simple.html`
 - إعدادات البراند: `brand-admin.html`
-- إعدادات الخصومات: `discount-admin-fixed.html`
+- الخصومات: `discount-admin-fixed.html`
 
-لا ترفع `service_role key` إلى GitHub. المفتاح المسموح في الواجهة هو Publishable/anon فقط.
+مفتاح Publishable/anon وحده مناسب للواجهة العامة. لا ترفع أبدًا `service_role key`.
