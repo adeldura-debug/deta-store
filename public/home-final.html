@@ -1,59 +1,47 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DETA</title><link rel="stylesheet" href="formal.css"></head><body><div id="promo" class="promo"></div><header><a class="logo" href="home-final.html">DETA<span>®</span></a><nav><a href="supabase-shop.html">المتجر</a><a href="supabase-shop.html#print">الطباعة المخصصة</a><a href="#about">عن DETA</a></nav><a class="btn" href="supabase-shop.html">تسوق الآن ↗</a></header><main><section class="hero"><div><p class="tag">DETA CLOTHING</p><h1 id="heroTitle">ملابس<br><em>بهوية.</em></h1><p id="heroText">قطع يومية بخامات راقية، صُممت لتمنحك حضورًا هادئًا وواضحًا.</p><a class="btn" href="supabase-shop.html">اكتشف المجموعة ↗</a></div><div id="heroVisual" class="hero-image"><span>DETA<br><small>MADE TO BE YOURS</small></span></div></section><section class="home-products"><p class="tag">THE COLLECTION</p><h2>اختياراتنا الأخيرة</h2><div id="products" class="product-row"></div></section><section class="print"><div><p class="tag">DETA CUSTOM PRINT</p><h2>فكرتك،<br><em>قطعتك.</em></h2><p>أرسل تصميمك وسنحوّله إلى قطعة مصنوعة لك بعناية.</p><a class="btn" href="supabase-shop.html#print">اطبع فكرتك ↗</a></div><div class="print-card">DETA<br><span>CUSTOM<br>EDITION</span></div></section><section id="about" class="about"><p class="tag">ABOUT DETA</p><h2 id="introTitle">الأناقة في<br><em>التفاصيل.</em></h2><p id="introText" style="max-width:430px;color:#65717d;line-height:2"></p></section></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script>const fsb=supabase.createClient(DETA_SUPABASE_URL,DETA_SUPABASE_ANON_KEY);async function render(){const s=await fsb.from('brand_settings').select('*').single();if(s.data){document.querySelector('#heroText').textContent=s.data.hero_text_ar||document.querySelector('#heroText').textContent;document.querySelector('#introTitle').textContent=s.data.intro_title_ar||'الأناقة في التفاصيل.';document.querySelector('#introText').textContent=s.data.intro_text_ar||'';if(s.data.hero_image)document.querySelector('#heroVisual').style.backgroundImage=`url('${s.data.hero_image}')`}const p=await fsb.from('products').select('*').eq('status','published').order('created_at',{ascending:false}).limit(4);document.querySelector('#products').innerHTML=(p.data||[]).map(x=>`<article class="mini"><div class="ph"></div><div><b>${x.name_ar}</b><p>${x.price} $</p><a href="supabase-shop.html">اطلب الآن ↗</a></div></article>`).join('')||'<p>لا توجد منتجات منشورة بعد.</p>'}render();</script></body></html>
-<script>(function(){var c=window.supabase.createClient(window.DETA_SUPABASE_URL,window.DETA_SUPABASE_ANON_KEY);c.from('brand_settings').select('*').eq('id',true).maybeSingle().then(function(r){var x=r.data;if(!x)return;var set=function(sel,val){var e=document.querySelector(sel);if(e&&val)e.textContent=val};set('#heroTitle',x.hero_title_ar);set('#heroText',x.hero_text_ar);set('.home-products h2',x.collection_title_ar);set('.print h2',x.custom_title_ar);set('.print p',x.custom_text_ar);set('.about h2',x.intro_title_ar);set('#introText',x.intro_text_ar);var v=document.querySelector('#heroVisual');if(v&&x.hero_image){v.style.backgroundImage='url("'+(/^https?:\/\//i.test(x.hero_image)?x.hero_image:window.DETA_SUPABASE_URL+'/storage/v1/object/public/product-images/'+encodeURIComponent(x.hero_image))+'")';v.style.backgroundSize='cover'}})})()</script>
-<script>(function(){var c=window.supabase.createClient(window.DETA_SUPABASE_URL,window.DETA_SUPABASE_ANON_KEY);c.from('brand_settings').select('footer_text_ar').eq('id',true).maybeSingle().then(function(r){var text=r.data&&r.data.footer_text_ar;if(!text)return;var f=document.querySelector('footer');if(!f){f=document.createElement('footer');f.className='footer';f.style.cssText='padding:25px 7%;color:#92999d;border-top:1px solid #e5e0d7;font-size:13px';document.body.appendChild(f)}f.textContent=text})})()</script>
-
-<!-- image-path-fix -->
-<script>
-(() => {
-  const fix = () => document.querySelectorAll('img').forEach((img) => {
-    const src = img.getAttribute('src');
-    if (src && src.startsWith('/') && !src.startsWith('//')) img.src = `../${src.slice(1)}`;
-  });
-  addEventListener('DOMContentLoaded', () => {
-    fix();
-    new MutationObserver(fix).observe(document.documentElement, {childList:true, subtree:true});
-  });
-})();
-</script>
-<script>
-(() => {
-  const root = document.querySelector('#products');
-  if (!root) return;
-  const client = window.supabase.createClient(window.DETA_SUPABASE_URL, window.DETA_SUPABASE_ANON_KEY);
-  const storageUrl = value => {
-    if (!value) return '';
-    if (/^https?:\/\//i.test(value)) return value;
-    const path = String(value).replace(/^\/+/, '').split('/').map(encodeURIComponent).join('/');
-    return `${window.DETA_SUPABASE_URL}/storage/v1/object/public/product-images/${path}`;
-  };
-  let loading = false;
-  const showProductImages = async () => {
-    if (loading || !root.querySelector('.mini')) return;
-    loading = true;
-    try {
-      const { data, error } = await client.from('products').select('*').eq('status', 'published').order('created_at', { ascending: false }).limit(4);
-      if (error || !data) return;
-      root.querySelectorAll('.mini').forEach((card, index) => {
-        const product = data[index];
-        const imageValue = product && (Array.isArray(product.images) ? product.images[0] : product.images || product.image_url);
-        const src = storageUrl(typeof imageValue === 'object' ? imageValue?.url : imageValue);
-        const slot = card.querySelector('.ph');
-        if (!src || !slot || slot.dataset.imageReady) return;
-        const image = document.createElement('img');
-        image.src = src;
-        image.alt = product.name_ar || 'صورة المنتج';
-        image.loading = 'lazy';
-        image.style.cssText = 'display:block;width:100%;height:220px;object-fit:contain;object-position:center;background:#e5e5e3';
-        slot.replaceChildren(image);
-        slot.style.cssText += ';min-height:220px;overflow:hidden;background:#e5e5e3';
-        slot.dataset.imageReady = 'true';
-      });
-    } finally {
-      loading = false;
-    }
-  };
-  const observer = new MutationObserver(showProductImages);
-  observer.observe(root, { childList: true, subtree: true });
-  showProductImages();
-})();
-</script>
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171715">
+  <meta name="description" content="DETA — ارتدِ ما يشبهك. قطع مختارة، خامات راقية، وتخصيص يصنعه خيالك.">
+  <title>DETA — Wear your own frequency</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="deta-premium.css">
+</head>
+<body class="deta-site" data-page="home">
+  <div class="grain" aria-hidden="true"></div>
+  <div class="announcement"><span class="live-dot"></span><span data-ar="تفاصيل تصنع الفرق. قطع تُصنع على مهل." data-en="Details make the difference. Made to move with you.">تفاصيل تصنع الفرق. قطع تُصنع على مهل.</span><a href="supabase-shop.html" data-ar="اكتشف المجموعة ↗" data-en="Explore the collection ↗">اكتشف المجموعة ↗</a></div>
+  <header class="site-header">
+    <a class="wordmark" href="home-final.html" aria-label="DETA home"><span class="wordmark-dot"></span>DETA</a>
+    <button class="mobile-menu" type="button" aria-label="فتح القائمة" aria-expanded="false"><span></span><span></span></button>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="supabase-shop.html" data-ar="المجموعة" data-en="Collection">المجموعة</a>
+      <a href="supabase-shop.html#customizer" data-ar="صمّم قطعتك" data-en="Make it yours">صمّم قطعتك</a>
+      <a href="#story" data-ar="حكاية DETA" data-en="Our story">حكاية DETA</a>
+    </nav>
+    <div class="header-actions"><button class="language-toggle" type="button" aria-label="Switch language">EN</button><a class="cart-link" href="supabase-shop.html#collection"><span data-ar="تسوّق" data-en="Shop">تسوّق</span><span class="cart-count" data-cart-count>0</span></a></div>
+  </header>
+  <main>
+    <section class="hero-editorial">
+      <div class="hero-image" role="img" aria-label="DETA fashion campaign"><div class="hero-image-tint"></div><div class="hero-stamp">D / 01<br><span>EDITION</span></div><div class="hero-image-caption"><span>FIG. 01 — THE EVERYDAY UNIFORM</span><span>BEIRUT · 2026</span></div></div>
+      <div class="hero-copy"><p class="eyebrow"><span class="eyebrow-line"></span><span data-ar="ملابس تُطبع على ذوقك" data-en="Wear it. Make it yours.">ملابس تُطبع على ذوقك</span><span class="eyebrow-index">DETA / 001</span></p><h1 data-brand-hero-title><span data-ar="قطعة تحمل" data-en="Wear your">قطعة تحمل</span><br><em data-ar="بصمتك." data-en="story.">بصمتك.</em></h1><p class="hero-description" data-brand-hero-text data-ar="هوديز، كنزات، وأكواب تتحول إلى قطعتك أنت. اختر اللون، أضف كلماتك أو ارفع تصميمك، وشاهد فكرتك قبل الطباعة." data-en="Hoodies, tees and mugs, made unmistakably yours. Pick a color, add your words or upload artwork, and preview it before print.">هوديز، كنزات، وأكواب تتحول إلى قطعتك أنت. اختر اللون، أضف كلماتك أو ارفع تصميمك، وشاهد فكرتك قبل الطباعة.</p><div class="hero-cta-row"><a class="round-cta" href="supabase-shop.html#collection"><span data-ar="اكتشف القطع" data-en="Explore the pieces">اكتشف القطع</span><b>↙</b></a><a class="round-cta hero-custom-cta" href="supabase-shop.html#customizer"><span data-ar="صمّم قطعتك" data-en="Create your piece">صمّم قطعتك</span><b>✳</b></a></div><span class="hero-note" data-ar="مصمّمة لتلبسها. جاهزة لتطبع عليها." data-en="Made to wear. Ready for your mark.">مصمّمة لتلبسها. جاهزة لتطبع عليها.</span><div class="hero-word">D<br>E<br>T<br>A</div></div>
+      <div class="hero-side-note">EST. IN MOTION <span>•</span> 2025</div>
+      <div class="hero-counter"><strong>01</strong><span>/</span>04</div>
+    </section>
+    <div class="ticker" aria-label="DETA design notes"><div class="ticker-track"><span>MADE TO BE YOURS</span><i>✳</i><span>FORM MEETS FEELING</span><i>✳</i><span>MADE TO BE YOURS</span><i>✳</i><span>FORM MEETS FEELING</span><i>✳</i></div></div>
+    <section class="collection-preview section-shell" id="collection">
+      <div class="section-heading"><div><p class="eyebrow"><span class="eyebrow-line"></span><span data-ar="من خزانة DETA" data-en="From the DETA wardrobe">من خزانة DETA</span></p><h2 data-ar="القطع التي<br><em>تعود إليها.</em>" data-en="The pieces<br><em>you come back to.</em>">القطع التي<br><em>تعود إليها.</em></h2></div><a class="quiet-link" href="supabase-shop.html#collection"><span data-ar="كل القطع" data-en="View all pieces">كل القطع</span><b>↗</b></a></div>
+      <div class="home-products product-grid" data-product-grid><div class="loading-card"><span class="spinner"></span><span data-ar="نحضّر القطع" data-en="Preparing the collection">نحضّر القطع</span></div></div>
+      <div class="center-link"><a class="underlined-link" href="supabase-shop.html#collection"><span data-ar="استكشف المجموعة كاملة" data-en="Explore the full collection">استكشف المجموعة كاملة</span> <b>↗</b></a></div>
+    </section>
+    <section class="custom-feature"><div class="custom-feature-art"><div class="fabric-swatch swatch-1"></div><div class="fabric-swatch swatch-2"></div><div class="fabric-swatch swatch-3"></div><div class="custom-art-caption">YOUR<br>MARK<br><span>HERE</span></div><span class="orbit-label">THE DETA CUSTOM LAB · 001</span></div><div class="custom-feature-copy"><p class="eyebrow"><span class="eyebrow-line"></span><span data-ar="مختبر التخصيص" data-en="The customization lab">مختبر التخصيص</span></p><h2 data-ar="الفكرة لك.<br><em>والقطعة أيضًا.</em>" data-en="The idea is yours.<br><em>So is the piece.</em>">الفكرة لك.<br><em>والقطعة أيضًا.</em></h2><p data-ar="اختر قصّتك. بدّل اللون. أضف عبارة أو حمّل تصميمك. شاهد قطعتك تتشكل أمامك، ثم أرسلها إلى ورشتنا." data-en="Choose your silhouette. Shift the color. Add a line or upload your artwork. Watch your piece take shape, then send it to our studio.">اختر قصّتك. بدّل اللون. أضف عبارة أو حمّل تصميمك. شاهد قطعتك تتشكل أمامك، ثم أرسلها إلى ورشتنا.</p><a class="round-cta light-cta" href="supabase-shop.html#customizer"><span data-ar="ابدأ التخصيص" data-en="Start customizing">ابدأ التخصيص</span><b>↙</b></a><div class="feature-index">01 — 03 <span>YOUR CANVAS AWAITS</span></div></div></section>
+    <section class="story section-shell" id="story"><div class="story-top"><p class="eyebrow"><span class="eyebrow-line"></span><span data-ar="حكايتنا باختصار" data-en="The short version">حكايتنا باختصار</span></p><span class="story-side">NO UNIFORM<br>FOR EVERYONE.</span></div><h2 data-brand-story-title data-ar="نؤمن أن الأناقة<br>لا تُشترى جاهزة.<br><em>بل تُصنع منك.</em>" data-en="Style isn't<br>something you<br><em>buy off the rack.</em>">نؤمن أن الأناقة<br>لا تُشترى جاهزة.<br><em>بل تُصنع منك.</em></h2><div class="story-bottom"><span>DETA / 2025—∞</span><p data-brand-story-text data-ar="خزانة تُبنى حولك، لا العكس. نبدأ بخامات مدروسة وقصّات خالدة، ونترك لك المساحة لتجعلها لك." data-en="A wardrobe built around you, never the other way around. Thoughtful materials, enduring silhouettes, and space to make them your own.">خزانة تُبنى حولك، لا العكس. نبدأ بخامات مدروسة وقصّات خالدة، ونترك لك المساحة لتجعلها لك.</p></div></section>
+    <section class="newsletter-band"><div><p class="eyebrow"><span class="eyebrow-line"></span>NOTES FROM DETA</p><h2 data-ar="لا ضجيج. فقط<br><em>ما يستحقّ الوصول.</em>" data-en="No noise. Just<br><em>what's worth opening.</em>">لا ضجيج. فقط<br><em>ما يستحقّ الوصول.</em></h2></div><a class="newsletter-link" href="supabase-shop.html"><span data-ar="تصفّح القطع" data-en="Browse the pieces">تصفّح القطع</span><b>↗</b></a></section>
+  </main>
+  <footer class="site-footer"><a class="wordmark" href="home-final.html"><span class="wordmark-dot"></span>DETA</a><span data-brand-footer>MADE TO BE YOURS · 2025—∞</span><div><a href="supabase-shop.html" data-ar="المتجر" data-en="Shop">المتجر</a><a href="supabase-shop.html#customizer" data-ar="التخصيص" data-en="Customize">التخصيص</a></div><small>© DETA STUDIO</small></footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="deta-storefront.js"></script>
+</body>
+</html>

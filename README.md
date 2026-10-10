@@ -11,7 +11,7 @@ Full-stack متجر ملابس وطباعة مخصصة، مبني بـ Node.js �
 
 ## فتح الموقع
 - المستخدم: افتح `http://localhost:3000/`.
-- المدير: افتح `http://localhost:3000/admin.html`.
+- المدير: افتح `http://localhost:3000/admin-final.html`.
 
 ## إنشاء حساب المدير أول مرة
 بعد تشغيل الخادم نفّذ الأمر التالي في PowerShell، مع تعديل البريد وكلمة المرور:
@@ -20,11 +20,11 @@ Full-stack متجر ملابس وطباعة مخصصة، مبني بـ Node.js �
 Invoke-RestMethod -Method Post http://localhost:3000/api/auth/setup -ContentType 'application/json' -Body '{"email":"admin@deta.store","password":"change-this-password"}'
 ```
 
-بعدها افتح `/admin.html` وسجّل الدخول بنفس البيانات. لا تضع البريد أو كلمة المرور في رابط الصفحة.
+بعدها افتح `/admin-final.html` وسجّل الدخول بنفس البيانات. لا تضع البريد أو كلمة المرور في رابط الصفحة.
 
 ## المسارات المهمة
 - واجهة المستخدم: `/`
-- لوحة المدير: `/admin.html`
+- لوحة المدير: `/admin-final.html`
 - فحص الخادم: `/api/health`
 - المنتجات: `/api/products`
 - الطلبات: `/api/orders`
