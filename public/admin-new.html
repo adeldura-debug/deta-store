@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0f0f0f">
+  <title>DETA Studio — لوحة الإدارة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin-glass.css">
+</head>
+<body class="admin-body">
+  <div class="bg-noise" aria-hidden="true"></div>
+  <div class="bg-gradient" aria-hidden="true"></div>
+
+  <!-- Login Screen -->
+  <section id="loginScreen" class="login-screen" role="main">
+    <div class="glass-card login-card">
+      <div class="login-header">
+        <div class="brand-mark">D</div>
+        <h1>DETA Studio</h1>
+        <p>لوحة إدارة المتجر</p>
+      </div>
+      <form id="loginForm" class="login-form">
+        <div class="field">
+          <label for="email">البريد الإلكتروني</label>
+          <input type="email" id="email" name="email" autocomplete="username" placeholder="admin@deta.studio" required>
+        </div>
+        <div class="field">
+          <label for="password">كلمة المرور</label>
+          <input type="password" id="password" name="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">دخول <span>→</span></button>
+      </form>
+      <p id="loginError" class="error-msg" role="alert" hidden></p>
+    </div>
+  </section>
+
+  <!-- Main App -->
+  <div id="app" class="app" hidden>
+    <!-- Header -->
+    <header class="glass-header">
+      <div class="header-left">
+        <a href="home-final.html" class="brand-link" title="عرض المتجر">
+          <span class="brand-dot"></span>DETA
+        </a>
+        <span class="header-divider"></span>
+        <span class="header-title">إدارة المتجر</span>
+      </div>
+      <div class="header-center">
+        <div class="stats-mini" id="statsMini">
+          <span data-stat="products" class="stat-item">قطع: <strong>—</strong></span>
+          <span data-stat="orders" class="stat-item">طلبات: <strong>—</strong></span>
+          <span data-stat="prints" class="stat-item">تصاميم: <strong>—</strong></span>
+        </div>
+      </div>
+      <div class="header-right">
+        <button id="logoutBtn" class="btn btn-ghost" title="تسجيل الخروج">خروج <span>→</span></button>
+      </div>
+    </header>
+
+    <!-- Tabs Navigation -->
+    <nav class="glass-tabs" role="tablist" aria-label="أقسام الإدارة">
+      <button role="tab" class="tab-btn active" data-tab="products" aria-selected="true">
+        <span class="tab-icon">📦</span>
+        <span>المنتجات</span>
+        <span class="tab-count" id="countProducts">0</span>
+      </button>
+      <button role="tab" class="tab-btn" data-tab="orders" aria-selected="false">
+        <span class="tab-icon">🧾</span>
+        <span>الطلبات</span>
+        <span class="tab-count" id="countOrders">0</span>
+      </button>
+      <button role="tab" class="tab-btn" data-tab="prints" aria-selected="false">
+        <span class="tab-icon">🎨</span>
+        <span>التصاميم</span>
+        <span class="tab-count" id="countPrints">0</span>
+      </button>
+      <button role="tab" class="tab-btn" data-tab="settings" aria-selected="false">
+        <span class="tab-icon">⚙️</span>
+        <span>الإعدادات</span>
+      </button>
+    </nav>
+
+    <!-- Tab Panels -->
+    <main class="tab-panels">
+      <!-- Products Tab -->
+      <section role="tabpanel" id="panelProducts" class="tab-panel active" aria-labelledby="tabProducts">
+        <div class="panel-header">
+          <h2>إدارة المنتجات</h2>
+          <div class="panel-actions">
+            <button id="btnAddProduct" class="btn btn-primary">
+              <span>+</span> منتج جديد
+            </button>
+            <button id="btnDeleteAllProducts" class="btn btn-danger">
+              <span>🗑️</span> حذف الكل
+            </button>
+          </div>
+        </div>
+        <div id="productsList" class="data-grid" aria-live="polite">
+          <div class="loading-state">جاري التحميل…</div>
+        </div>
+      </section>
+
+      <!-- Orders Tab -->
+      <section role="tabpanel" id="panelOrders" class="tab-panel" aria-labelledby="tabOrders" hidden>
+        <div class="panel-header">
+          <h2>طلبات العملاء</h2>
+        </div>
+        <div id="ordersList" class="orders-list" aria-live="polite">
+          <div class="loading-state">جاري التحميل…</div>
+        </div>
+      </section>
+
+      <!-- Prints Tab -->
+      <section role="tabpanel" id="panelPrints" class="tab-panel" aria-labelledby="tabPrints" hidden>
+        <div class="panel-header">
+          <h2>طلبات التصميم الخاص</h2>
+        </div>
+        <div id="printsList" class="prints-list" aria-live="polite">
+          <div class="loading-state">جاري التحميل…</div>
+        </div>
+      </section>
+
+      <!-- Settings Tab -->
+      <section role="tabpanel" id="panelSettings" class="tab-panel" aria-labelledby="tabSettings" hidden>
+        <div class="panel-header">
+          <h2>الإعدادات</h2>
+        </div>
+        <div class="settings-grid">
+          <div class="glass-card settings-card">
+            <h3>معلومات المتجر</h3>
+            <form id="settingsForm">
+              <div class="field-row">
+                <div class="field">
+                  <label>اسم المتجر (عربي)</label>
+                  <input type="text" name="store_name_ar" id="storeNameAr" placeholder="DETA">
+                </div>
+                <div class="field">
+                  <label>اسم المتجر (إنجليزي)</label>
+                  <input type="text" name="store_name_en" id="storeNameEn" placeholder="DETA">
+                </div>
+              </div>
+              <div class="field">
+                <label>الوصف (عربي)</label>
+                <textarea name="store_desc_ar" id="storeDescAr" rows="3" placeholder="وصف المتجر…"></textarea>
+              </div>
+              <div class="field">
+                <label>الوصف (إنجليزي)</label>
+                <textarea name="store_desc_en" id="storeDescEn" rows="3" placeholder="Store description…"></textarea>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>العملة</label>
+                  <select name="currency" id="currency">
+                    <option value="USD">$ دولار أمريكي</option>
+                    <option value="SAR">ر.س ريال سعودي</option>
+                    <option value="AED">د.إ درهم إماراتي</option>
+                    <option value="EGP">ج.م جنيه مصري</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>لغة افتراضية</label>
+                  <select name="default_lang" id="defaultLang">
+                    <option value="ar">العربية</option>
+                    <option value="en">English</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">حفظ الإعدادات</button>
+            </form>
+          </div>
+
+          <div class="glass-card settings-card">
+            <h3>Supabase Storage</h3>
+            <div class="storage-info" id="storageInfo">
+              <div class="storage-bar">
+                <div class="storage-fill" id="storageFill"></div>
+              </div>
+              <p class="storage-text">مستخدم: <strong id="storageUsed">—</strong> من <strong id="storageTotal">—</strong></p>
+            </div>
+            <button id="btnClearStorage" class="btn btn-danger btn-full">مسح التخزين المؤقت</button>
+          </div>
+
+          <div class="glass-card settings-card">
+            <h3>أدوات الصيانة</h3>
+            <div class="maintenance-actions">
+              <button id="btnSyncProducts" class="btn btn-secondary btn-full">مزامنة المنتجات</button>
+              <button id="btnRefreshData" class="btn btn-secondary btn-full">تحديث البيانات</button>
+              <button id="btnTestConnection" class="btn btn-secondary btn-full">اختبار الاتصال</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Product Modal (Add/Edit) -->
+  <dialog id="productModal" class="glass-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-backdrop" tabindex="-1"></div>
+    <div class="modal-content">
+      <header class="modal-header">
+        <h3 id="modalTitle">منتج جديد</h3>
+        <button class="modal-close" aria-label="إغلاق">×</button>
+      </header>
+      <form id="productForm" class="modal-form">
+        <input type="hidden" name="product_id" id="productId">
+        <input type="hidden" name="current_image" id="currentImage">
+
+        <div class="form-row">
+          <div class="field">
+            <label>الاسم (عربي) *</label>
+            <input type="text" name="name_ar" id="nameAr" placeholder="هودي ثقيل DETA" required>
+          </div>
+          <div class="field">
+            <label>الاسم (إنجليزي) *</label>
+            <input type="text" name="name_en" id="nameEn" placeholder="DETA Heavyweight Hoodie" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>الفئة</label>
+            <select name="category" id="category">
+              <option value="hoodie">هودي</option>
+              <option value="tee">تيشيرت</option>
+              <option value="mug">كوب</option>
+              <option value="accessory">إكسسوار</option>
+              <option value="other">أخرى</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>الحالة</label>
+            <select name="status" id="status">
+              <option value="published">منشور</option>
+              <option value="draft">مسودة</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>السعر *</label>
+            <input type="number" name="price" id="price" step="0.01" min="0" placeholder="55.00" required>
+          </div>
+          <div class="field">
+            <label>السعر السابق</label>
+            <input type="number" name="old_price" id="oldPrice" step="0.01" min="0" placeholder="اختياري">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>المخزون</label>
+            <input type="number" name="stock" id="stock" min="0" placeholder="24" value="0">
+          </div>
+          <div class="field">
+            <label>الحد الأدنى للطلب</label>
+            <input type="number" name="min_order" id="minOrder" min="1" placeholder="1" value="1">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>المقاسات (مفصولة بفاصلة)</label>
+            <input type="text" name="sizes" id="sizes" placeholder="S, M, L, XL">
+          </div>
+          <div class="field">
+            <label>الألوان (مفصولة بفاصلة)</label>
+            <input type="text" name="colors" id="colors" placeholder="أسود, أبيض, رمادي">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>الوصف (عربي)</label>
+          <textarea name="description_ar" id="descAr" rows="3" placeholder="وصف قصير وواضح…"></textarea>
+        </div>
+        <div class="field">
+          <label>الوصف (إنجليزي)</label>
+          <textarea name="description_en" id="descEn" rows="3" placeholder="Short description…"></textarea>
+        </div>
+
+        <div class="field image-upload">
+          <label>الصورة الرئيسية</label>
+          <div class="image-dropzone" id="imageDropzone">
+            <input type="file" name="image" id="productImage" accept="image/png,image/jpeg,image/webp" hidden>
+            <div class="dropzone-content" id="dropzoneContent">
+              <span class="upload-icon">📷</span>
+              <span>اسحب الصورة هنا أو اضغط للاختيار</span>
+              <small>PNG, JPG, WEBP · حتى 5MB</small>
+            </div>
+            <div class="image-preview" id="imagePreview" hidden>
+              <img id="previewImg" alt="معاينة">
+              <button type="button" class="remove-image" aria-label="إزالة الصورة">×</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost modal-cancel">إلغاء</button>
+          <button type="submit" class="btn btn-primary" id="submitBtn">حفظ <span>→</span></button>
+        </div>
+      </form>
+      <p id="modalError" class="error-msg" role="alert" hidden></p>
+    </div>
+  </dialog>
+
+  <!-- Order Detail Modal -->
+  <dialog id="orderModal" class="glass-modal large" role="dialog" aria-modal="true" aria-labelledby="orderModalTitle">
+    <div class="modal-backdrop" tabindex="-1"></div>
+    <div class="modal-content">
+      <header class="modal-header">
+        <h3 id="orderModalTitle">تفاصيل الطلب</h3>
+        <button class="modal-close" aria-label="إغلاق">×</button>
+      </header>
+      <div class="order-detail" id="orderDetail">
+        <div class="loading-state">جاري التحميل…</div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Toast Notifications -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="admin-new.js"></script>
+</body>
+</html>
