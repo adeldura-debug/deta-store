@@ -54,7 +54,7 @@
     const root = $('#products');
     root.innerHTML = list.map(product => {
       const image = productImage(product);
-      return `<article class="admin-record"><div class="admin-record-thumb">${image ? `<img src="${escapeHTML(image)}" alt="">` : 'D.'}</div><div><h3>${escapeHTML(product.name_ar || product.name_en || 'DETA')}</h3><p>${escapeHTML(product.name_en || '')}${product.category ? ` · ${escapeHTML(product.category)}` : ''}${Array.isArray(product.sizes) && product.sizes.length ? ` · ${escapeHTML(product.sizes.join(', '))}` : ''}</p></div><div class="admin-record-side"><strong>${money(product.price)}</strong><span>${escapeHTML(product.stock ?? 0)} متاح</span><button type="button" data-delete-product="${escapeHTML(product.id)}">حذف</button></div></article>`;
+      return `<article class="admin-record"><div class="admin-record-thumb">${image ? `<img src="${escapeHTML(image)}" alt="">` : 'D.'}</div><div><h3>${escapeHTML(product.name_ar || product.name_en || 'DETA')}</h3><p>${escapeHTML(product.name_en || '')}${product.category ? ` · ${escapeHTML(product.category)}` : ''}${Array.isArray(product.sizes) && product.sizes.length ? ` · ${escapeHTML(product.sizes.join(', '))}` : ''}</p></div><div class="admin-record-side"><strong>${money(product.price)}</strong><span>${escapeHTML(product.stock ?? 0)} متاح</span><button type="button" data-edit-product="${escapeHTML(product.id)}" class="edit-btn">تعديل</button><button type="button" data-delete-product="${escapeHTML(product.id)}" class="delete-btn">حذف</button></div></article>`;
     }).join('') || '<p class="admin-empty">لا توجد قطع بعد. أضف أول قطعة للمتجر.</p>';
   }
 
@@ -76,6 +76,10 @@
     $('#orders').innerHTML = orders.map(order => {
       const items = orderItems(order).map((item,index) => {
         const custom = item.customization || {};
+        // Find product image from loaded products
+        const product = products.find(p => p.id === item.product);
+        const productImageUrl = product ? productImage(product) : '';
+        
         const details = [
           item.kind && ({hoodie:'هودي',tee:'كنزة نص كم',mug:'كوب'}[item.kind] || item.kind),
           item.size && `المقاس: ${item.size}`,
@@ -86,8 +90,14 @@
           custom.text && `النص المخصص: “${custom.text}”`,
           custom.fileName && `ملف التصميم: ${custom.fileName}`
         ].filter(Boolean).join(' · ');
-        const design = imagePreview(item.design_image,'admin-order-item-design');
-        return `<li class="admin-order-item"><div class="admin-record-thumb">${imagePreview(item.design_image,'') || 'D.'}</div><div><strong class="admin-order-item-name">${escapeHTML(item.name_ar || item.name || item.name_en || `قطعة ${index+1}`)}</strong><div class="admin-order-item-details">${escapeHTML(details)}</div>${design ? `<a href="${escapeHTML(item.design_image)}" download="deta-design-${index+1}.webp" aria-label="تنزيل التصميم">${design}</a>` : ''}</div></li>`;
+        
+        // Show custom design image if exists, otherwise product image
+        const designImage = item.design_image && (/^https:\/\//i.test(item.design_image) || /^data:image\//i.test(item.design_image)) 
+          ? item.design_image 
+          : productImageUrl;
+        const design = imagePreview(designImage, 'admin-order-item-design');
+        
+        return `<li class="admin-order-item"><div class="admin-record-thumb">${designImage ? `<img src="${escapeHTML(designImage)}" alt="" loading="lazy">` : 'D.'}</div><div><strong class="admin-order-item-name">${escapeHTML(item.name_ar || item.name || item.name_en || `قطعة ${index+1}`)}</strong><div class="admin-order-item-details">${escapeHTML(details)}</div>${design ? `<a href="${escapeHTML(designImage)}" download="deta-design-${index+1}.webp" aria-label="تنزيل التصميم">${design}</a>` : ''}</div></li>`;
       }).join('') || '<li class="admin-empty">لا توجد تفاصيل محفوظة لهذا الطلب.</li>';
       const date = order.created_at ? new Date(order.created_at).toLocaleString('ar-SY') : '—';
       const currentStatus = order.status || 'new';
@@ -148,12 +158,116 @@
     await loadDashboard();
   });
 
-  $('#products').addEventListener('click',async event => {
-    const button = event.target.closest('[data-delete-product]');
-    if (!button || !confirm('حذف هذه القطعة من كتالوج DETA؟')) return;
-    const {error} = await db.from('products').delete().eq('id',button.dataset.deleteProduct);
-    if (error) { setMessage('#msg',error.message,true); return; }
+  // --- Edit Modal Logic ---
+  const editModal = $('#editModal');
+  const editForm = $('#editForm');
+  const editMsg = $('#editMsg');
+  let currentEditingId = null;
+
+  function openEditModal(product) {
+    currentEditingId = product.id;
+    $('#editProductId').value = product.id;
+    $('#editNameAr').value = product.name_ar || '';
+    $('#editNameEn').value = product.name_en || '';
+    $('#editCategory').value = product.category || '';
+    $('#editPrice').value = product.price || '';
+    $('#editOldPrice').value = product.old_price || '';
+    $('#editStock').value = product.stock || '';
+    $('#editSizes').value = Array.isArray(product.sizes) ? product.sizes.join(', ') : '';
+    $('#editColors').value = Array.isArray(product.colors) ? product.colors.join(', ') : '';
+    $('#editStatus').value = product.status || 'published';
+    $('#editDescAr').value = product.description_ar || '';
+    $('#editDescEn').value = product.description_en || '';
+    $('#editPreview').removeAttribute('src');
+    $('#editPreview').style.display = 'none';
+    setMessage('#editMsg', '');
+    editModal.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeEditModal() {
+    editModal.hidden = true;
+    document.body.style.overflow = '';
+    currentEditingId = null;
+    editForm.reset();
+  }
+
+  editModal?.querySelectorAll('[data-close-modal]').forEach(btn => {
+    btn.addEventListener('click', closeEditModal);
+  });
+
+  $('#editImage').addEventListener('change', event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!['image/png','image/jpeg','image/webp'].includes(file.type) || file.size > 5*1024*1024) {
+      event.target.value = '';
+      setMessage('#editMsg','اختر صورة PNG أو JPG أو WEBP بحجم لا يتجاوز 5MB.',true);
+      return;
+    }
+    const preview = $('#editPreview');
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = 'block';
+  });
+
+  editForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!currentEditingId) return;
+    const form = Object.fromEntries(new FormData(event.currentTarget));
+    const file = $('#editImage').files?.[0];
+    
+    setMessage('#editMsg','جارٍ حفظ التغييرات…');
+    
+    let imageUrl = null;
+    if (file) {
+      const extension = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g,'') || 'webp';
+      const path = `${crypto.randomUUID()}.${extension}`;
+      const upload = await db.storage.from('product-images').upload(path,file,{contentType:file.type,upsert:false});
+      if (upload.error) { setMessage('#editMsg',upload.error.message,true); return; }
+      imageUrl = db.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+    }
+
+    const updateData = {
+      name_ar: form.name_ar,
+      name_en: form.name_en,
+      description_ar: form.description_ar,
+      description_en: form.description_en,
+      price: Number(form.price),
+      old_price: Number(form.old_price) || null,
+      stock: Number(form.stock),
+      category: form.category,
+      sizes: String(form.sizes||'').split(',').map(v=>v.trim()).filter(Boolean),
+      colors: String(form.colors||'').split(',').map(v=>v.trim()).filter(Boolean),
+      status: form.status
+    };
+    
+    if (imageUrl) {
+      updateData.images = [imageUrl];
+    }
+
+    const {error} = await db.from('products').update(updateData).eq('id', currentEditingId);
+    if (error) { setMessage('#editMsg', error.message, true); return; }
+    
+    setMessage('#editMsg', 'تم حفظ التغييرات بنجاح.');
     await loadDashboard();
+    setTimeout(closeEditModal, 800);
+  });
+
+  // --- Delete Product ---
+  $('#products').addEventListener('click',async event => {
+    const deleteBtn = event.target.closest('[data-delete-product]');
+    if (deleteBtn) {
+      if (!confirm('حذف هذه القطعة من كتالوج DETA؟')) return;
+      const {error} = await db.from('products').delete().eq('id', deleteBtn.dataset.deleteProduct);
+      if (error) { setMessage('#msg', error.message, true); return; }
+      await loadDashboard();
+      return;
+    }
+    
+    const editBtn = event.target.closest('[data-edit-product]');
+    if (editBtn) {
+      const product = products.find(p => p.id === editBtn.dataset.editProduct);
+      if (product) openEditModal(product);
+    }
   });
 
   $('#orders').addEventListener('change',async event => {
