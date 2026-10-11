@@ -256,9 +256,19 @@
   $('#products').addEventListener('click',async event => {
     const deleteBtn = event.target.closest('[data-delete-product]');
     if (deleteBtn) {
+      const productId = deleteBtn.dataset.deleteProduct;
+      console.log('🗑️ Delete clicked for:', productId);
       if (!confirm('حذف هذه القطعة من كتالوج DETA؟')) return;
-      const {error} = await db.from('products').delete().eq('id', deleteBtn.dataset.deleteProduct);
-      if (error) { setMessage('#msg', error.message, true); return; }
+      
+      setMessage('#msg', 'جاري الحذف...');
+      const {error} = await db.from('products').delete().eq('id', productId);
+      if (error) {
+        console.error('❌ Delete error:', error);
+        setMessage('#msg', error.message, true);
+        return;
+      }
+      console.log('✅ Deleted:', productId);
+      setMessage('#msg', 'تم الحذف بنجاح');
       await loadDashboard();
       return;
     }
